@@ -46,7 +46,7 @@ cargo install twiggy
 
 ## Learn More!
 
-[**Read the Twiggy guide!**](https://rustwasm.github.io/twiggy)
+[**Read the Twiggy guide!**](https://alexene.dev/twiggy/)
 
 <div align="center">
   <img src="./guide/src/twiggy.png"/>
