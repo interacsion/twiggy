@@ -9,22 +9,19 @@ repository = "https://github.com/rustwasm/twiggy"
 version = "0.8.0"
 edition = "2018"
 
-[lib]
-path = "./analyze.rs"
+[features]
+default = ["emit_json", "emit_csv"]
+emit_json = ["dep:serde_json"]
+emit_csv = ["dep:csv", "dep:serde"]
+clap = ["dep:clap"]
 
 [dependencies]
-anyhow = "1.0"
 twiggy-ir = { version = "=0.8.0", path = "../ir" }
-twiggy-opt = { version = "=0.8.0", path = "../opt", default-features = false }
-twiggy-traits = { version = "=0.8.0", path = "../traits" }
-csv = "1.2.2"
-regex = "1.4.2"
-serde = "1.0"
-serde_derive = "1.0"
-petgraph = "0.6.2"
-
-[features]
-default = ["emit_csv", "emit_json", "emit_text"]
-emit_json = ["twiggy-traits/emit_json"]
-emit_csv = ["twiggy-traits/emit_csv"]
-emit_text = ["twiggy-traits/emit_text"]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"], optional = true }
+csv = { version = "1", optional = true }
+derive_more = { workspace = true, features = ["display", "from_str"] }
+regex = "1"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", features = ["preserve_order"], optional = true }
+petgraph = "0.6"

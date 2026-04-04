@@ -9,16 +9,13 @@ repository = "https://github.com/rustwasm/twiggy"
 version = "0.8.0"
 edition = "2018"
 
-[lib]
-path = "./parser.rs"
-
-[dependencies]
-anyhow = "1.0"
-object = { version = "0.36.7", optional = true }
-wasmparser = "0.230.0"
-twiggy-ir = { version = "=0.8.0", path = "../ir" }
-twiggy-traits = { version = "=0.8.0", path = "../traits" }
-
 [features]
 default = ["dwarf"]
-dwarf = ["object", "twiggy-traits/dwarf"]
+dwarf = ["object"]
+
+[dependencies]
+twiggy-ir = { version = "=0.8.0", path = "../ir" }
+anyhow = { workspace = true }
+derive_more = { workspace = true, features = ["display", "from_str"] }
+object = { version = "0.36", optional = true }
+wasmparser = "0.230"

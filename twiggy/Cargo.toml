@@ -12,19 +12,13 @@ edition = "2018"
 [badges]
 travis-ci = { repository = "rustwasm/twiggy" }
 
-[[bin]]
-name = "twiggy"
-path = "./twiggy.rs"
-
 [dependencies]
-anyhow = "1.0"
-structopt = "0.3"
-twiggy-analyze = { version = "=0.8.0", path = "../analyze" }
+twiggy-analyze = { version = "=0.8.0", path = "../analyze", features = ["clap"] }
 twiggy-ir = { version = "=0.8.0", path = "../ir" }
-twiggy-opt = { version = "=0.8.0", path = "../opt", features = ["cli"] }
 twiggy-parser = { version = "=0.8.0", path = "../parser" }
-twiggy-traits = { version = "=0.8.0", path = "../traits" }
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
-colored = "2.0.0"
-diff = "0.1.13"
+colored = "2"
+diff = "0.1"

@@ -1,15 +1,12 @@
 //! Parses binaries into `twiggy_ir::Items`.
 
-#![deny(missing_docs)]
-#![deny(missing_debug_implementations)]
-
 use std::ffi::OsStr;
 use std::fs;
 use std::io::Read;
 use std::path;
 
+use derive_more::{Display, FromStr};
 use twiggy_ir as ir;
-use twiggy_traits as traits;
 
 #[cfg(feature = "dwarf")]
 mod object_parse;
@@ -17,21 +14,32 @@ mod wasm_parse;
 
 const WASM_MAGIC_NUMBER: [u8; 4] = [0x00, 0x61, 0x73, 0x6D];
 
+/// Selects the parse mode for the input data.
+#[derive(Display, FromStr, Default, Clone, Copy, Debug)]
+#[display(rename_all = "lowercase")]
+pub enum ParseMode {
+    /// Automatically determined mode of parsing, e.g. based on file extension.
+    #[default]
+    Auto,
+    /// WebAssembly file parse mode.
+    Wasm,
+    /// DWARF sections parse mode.
+    #[cfg(feature = "dwarf")]
+    Dwarf,
+}
+
 /// Parse the file at the given path into IR items.
-pub fn read_and_parse<P: AsRef<path::Path>>(
-    path: P,
-    mode: traits::ParseMode,
-) -> anyhow::Result<ir::Items> {
+pub fn read_and_parse<P: AsRef<path::Path>>(path: P, mode: ParseMode) -> anyhow::Result<ir::Items> {
     let path = path.as_ref();
     let mut file = fs::File::open(path)?;
     let mut data = vec![];
     file.read_to_end(&mut data)?;
 
     match mode {
-        traits::ParseMode::Wasm => parse_wasm(&data),
+        ParseMode::Wasm => parse_wasm(&data),
         #[cfg(feature = "dwarf")]
-        traits::ParseMode::Dwarf => parse_other(&data),
-        traits::ParseMode::Auto => parse_auto(path.extension(), &data),
+        ParseMode::Dwarf => parse_other(&data),
+        ParseMode::Auto => parse_auto(path.extension(), &data),
     }
 }
 

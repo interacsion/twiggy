@@ -2,17 +2,12 @@
 members = [
   "./analyze",
   "./ir",
-  "./opt",
   "./parser",
   "./twiggy",
-  "./traits",
-  "./wasm-api",
   "./job_runner"
 ]
 
-[profile.release]
-codegen-units = 1
-debug = true
-incremental = false
-lto = true
-opt-level = "s"
+[workspace.dependencies]
+anyhow = "1"
+clap = "4"
+derive_more = "2"

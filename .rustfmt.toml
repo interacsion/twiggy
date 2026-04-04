@@ -1,3 +1,0 @@
-# We do not merge derives because of `twiggy-opt` and its build script.
-# Merging derives in `opt/definitions` will break the wasm api.
-merge_derives = false
