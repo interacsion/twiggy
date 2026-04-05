@@ -1,11 +1,5 @@
 [workspace]
-members = [
-  "./analyze",
-  "./ir",
-  "./parser",
-  "./twiggy",
-  "./job_runner"
-]
+members = ["analyze", "ir", "parser", "twiggy"]
 resolver = "3"
 
 [workspace.dependencies]
