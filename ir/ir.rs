@@ -92,11 +92,7 @@ impl ItemsBuilder {
             .next()
             .and_then(
                 |(start, &(id, len))| {
-                    if offset < start + len {
-                        Some(id)
-                    } else {
-                        None
-                    }
+                    if offset < start + len { Some(id) } else { None }
                 },
             )
     }
@@ -159,14 +155,14 @@ impl ops::Index<Id> for Items {
 
 impl Items {
     /// Iterate over all of the IR items.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter {
             inner: self.items.iter(),
         }
     }
 
     /// Iterate over an item's neighbors.
-    pub fn neighbors(&self, id: Id) -> Neighbors {
+    pub fn neighbors(&self, id: Id) -> Neighbors<'_> {
         Neighbors {
             inner: self
                 .edges
@@ -176,7 +172,7 @@ impl Items {
     }
 
     /// Iterate over an item's predecessors.
-    pub fn predecessors(&self, id: Id) -> Predecessors {
+    pub fn predecessors(&self, id: Id) -> Predecessors<'_> {
         Predecessors {
             inner: self
                 .predecessors
@@ -616,11 +612,9 @@ impl Code {
             return Some(s.to_string());
         }
 
-        if let Ok(sym) = cpp_demangle::Symbol::new(s) {
-            return Some(sym.to_string());
-        }
-
-        None
+        cpp_demangle::Symbol::new(s)
+            .ok()
+            .and_then(|sym| sym.demangle().ok())
     }
 
     fn extract_generic_function(demangled: &str) -> Option<String> {

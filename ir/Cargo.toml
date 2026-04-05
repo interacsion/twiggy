@@ -13,9 +13,9 @@ edition = "2024"
 path = "./ir.rs"
 
 [dependencies]
-cpp_demangle = { version = "0.3.5", default-features = false }
+cpp_demangle = "0.5"
 frozen = "1"
-petgraph = "0.6.2"
-rustc-demangle = "0.1.21"
+petgraph = "0.8"
+rustc-demangle = "0.1"
 serde = "1.0"
 serde_derive = "1.0"

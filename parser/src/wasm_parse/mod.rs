@@ -1,9 +1,11 @@
 use super::Parse;
 use anyhow::anyhow;
-use std::collections::HashMap;
+use std::{collections::HashMap, iter};
 use std::ops::Range;
 use twiggy_ir::{self as ir, Id};
-use wasmparser::{self, FromReader, NameSectionReader, Operator, RefType, SectionLimited, ValType};
+use wasmparser::{
+    self, ExternalKind, FromReader, Import, ImportSectionReader, NameSectionReader, Operator, RefType, SectionLimited, TypeRef, ValType
+};
 
 #[derive(Default)]
 pub struct SectionIndices {
@@ -36,7 +38,7 @@ pub struct ModuleReader<'a> {
 }
 
 impl<'a> ModuleReader<'a> {
-    pub fn new(data: &[u8]) -> ModuleReader {
+    pub fn new(data: &[u8]) -> ModuleReader<'_> {
         ModuleReader {
             data: data,
             offset: 0,
@@ -250,10 +252,11 @@ impl<'a> Parse<'a> for ModuleReader<'a> {
                     indices.type_ = Some(*idx);
                 }
                 wasmparser::Payload::ImportSection(reader) => {
-                    for (i, import) in reader.clone().into_iter().enumerate() {
+                    for (i, import) in reader.clone().into_imports().enumerate() {
                         let id = Id::entry(*idx, i);
+
                         match import?.ty {
-                            wasmparser::TypeRef::Func(_) => {
+                            wasmparser::TypeRef::Func(_) | wasmparser::TypeRef::FuncExact(_) => {
                                 indices.functions.push(id);
                             }
                             wasmparser::TypeRef::Table(_) => {
@@ -424,15 +427,17 @@ fn parse_names_section<'a>(reader: NameSectionReader<'a>) -> anyhow::Result<Name
 
 fn count_imported_functions<'a>(indexed_sections: &[IndexedSection<'a>]) -> anyhow::Result<usize> {
     let mut imported_functions = 0;
+
     for IndexedSection(_, section) in indexed_sections.iter() {
         if let wasmparser::Payload::ImportSection(reader) = section {
-            for import in reader.clone() {
-                if let wasmparser::TypeRef::Func(_) = import?.ty {
+            for import in reader.clone().into_imports() {
+                if let TypeRef::Func(_) = import?.ty {
                     imported_functions += 1;
                 }
             }
         }
     }
+
     Ok(imported_functions)
 }
 
@@ -711,12 +716,13 @@ impl<'a> Parse<'a> for wasmparser::ImportSectionReader<'a> {
     type ItemsExtra = usize;
 
     fn parse_items(self, items: &mut ir::ItemsBuilder, idx: usize) -> anyhow::Result<()> {
-        for (i, imp) in iterate_with_size(self).enumerate() {
-            let (imp, size) = imp?;
+        for (i, import) in iterate_import_section_with_size(self).enumerate() {
+            let (import, size) = import?;
             let id = Id::entry(idx, i);
-            let name = format!("import {}::{}", imp.module, imp.name);
+            let name = format!("import {}::{}", import.module, import.name);
             items.add_item(ir::Item::new(id, name, size, ir::Misc::new()));
         }
+
         Ok(())
     }
 
@@ -812,7 +818,7 @@ impl<'a> Parse<'a> for wasmparser::ExportSectionReader<'a> {
             let (exp, _) = exp?;
             let exp_id = Id::entry(idx, i);
             match exp.kind {
-                wasmparser::ExternalKind::Func => {
+                wasmparser::ExternalKind::Func | ExternalKind::FuncExact => {
                     items.add_edge(exp_id, indices.functions[exp.index as usize]);
                 }
                 wasmparser::ExternalKind::Table => {
@@ -962,6 +968,29 @@ fn iterate_with_size<'a, T: FromReader<'a> + 'a>(
             None => end,
         };
         Ok((item, (next_offset - offset) as u32))
+    })
+}
+
+fn iterate_import_section_with_size<'a>(
+    s: ImportSectionReader<'a>,
+) -> impl Iterator<Item = anyhow::Result<(Import<'a>, u32)>> + 'a {
+    let end = s.range().end;
+    let mut iter = s.into_imports_with_offsets().peekable();
+
+    iter::from_fn(move || {
+        let (offset, import) = match iter.next() {
+            Some(Ok(import)) => import,
+            Some(Err(error)) => return Some(Err(error.into())),
+            None => return None,
+        };
+
+        let next_offset = match iter.peek() {
+            Some(Ok((offset, _))) => *offset,
+            Some(Err(err)) => return Some(Err(err.clone().into())),
+            None => end,
+        };
+
+        Some(Ok((import, (next_offset - offset) as u32)))
     })
 }
 

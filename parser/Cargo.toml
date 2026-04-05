@@ -17,5 +17,5 @@ dwarf = ["object"]
 twiggy-ir = { version = "=0.8.0", path = "../ir" }
 anyhow = { workspace = true }
 derive_more = { workspace = true, features = ["display", "from_str"] }
-object = { version = "0.36", optional = true }
-wasmparser = "0.230"
+object = { version = "0.39", optional = true }
+wasmparser = "0.246"

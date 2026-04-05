@@ -24,4 +24,4 @@ derive_more = { workspace = true, features = ["display", "from_str"] }
 regex = "1"
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", features = ["preserve_order"], optional = true }
-petgraph = "0.6"
+petgraph = "0.8"

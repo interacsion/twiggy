@@ -20,5 +20,5 @@ anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
-colored = "2"
+colored = "3"
 diff = "0.1"
